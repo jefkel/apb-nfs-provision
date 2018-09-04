@@ -11,26 +11,29 @@
 Currently, you can do the following to push the apb into OC
 
 `oc login` (as user with cluster admin role - not as system:admin)
+
 `oc get route docker-registry -n default`
  - use HOST/PORT value as ${OSC_DOCKER_REG}
+
 `export OSC_DOCKER_REG=$(oc get route docker-registry -n default | grep docker-registry | awk '{print $2}')`
 
 confirm /etc/containers/registries.conf has insecure route (if needed)
  - add to [registries.insecure] section:
+
 `registries = [${OSC_DOCKER_REG}]`
 
 This apb was created with "apb init", and can be pushed to OKD via the following (in the top folder):
 
-'''
+```
 apb prepare
 apb build --tag ${OSC_DOCKER_REG}/openshift/backup-pvc-apb
 apb push --registry-route ${OSC_DOCKER_REG}
-'''
+```
 
 # Update openshift-ansible-service-broker
 Add an opaque secret as per the following sample (ensure you base64 encode your values)
 
-'''yaml
+```yaml
 ---
 apiVersion: v1
 kind: Secret
@@ -47,17 +50,17 @@ data:
     "pv_srv_acct": base64{PV Admin ServiceAcct}
     "pv_srv_acct_token": base64{Auth Token for PV Admin ServiceAcct}
 ...
-'''
+```
 
 Update cm/broker-config:
 add to secrets section:
 
-'''
+```
   secrets:
   - title: backup-nfs-auth
     apb_name: lreg-backup-pvc-apb
     secret: external-nfs-host-auth
-'''
+```
 
 Redeploy openshift-ansible-service-broker to use new broker-config
 

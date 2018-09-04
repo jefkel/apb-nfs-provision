@@ -42,6 +42,8 @@ data:
     "backup_storage_thinpool": base64{lv thinpool name}
     "remote_user": base64{remote nfs host user}
     "auth_key": base64{sshkey auth for remote_user}
+    "pv_srv_acct": base64{PV Admin ServiceAcct}
+    "pv_srv_acct_token": base64{Auth Token for PV Admin ServiceAcct}
 ...
 '''
 

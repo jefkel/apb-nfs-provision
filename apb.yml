@@ -41,8 +41,9 @@ plans:
         required: true
         display_group: Advanced Settings
 # Removed remote_user/key as well as OSC Service Acct and Token from parameters list.  APB will fail if
-# these parameters are not added to the opaque secret, however if they are added in the user entry area, 
-# they will be available to the project via the apb_parameters secret.
+# these parameters are not available.  If they are added in the user entry area they will be available
+# to the project via the apb_parameters secret.  However if they are only present in the opaque secret,
+# they are only visible via the broker namespace, or within the running apb.
 #      - name: remote_user
 #        title: SSH Remote User
 #        type: string

@@ -18,7 +18,7 @@
       pvol_name: "{{ _get_pvc.stdout }}"
       pvol_size: "{{ rq_size }}"
       mode: 'deprovision'
-      secret_mnt: "/etc/apb-secrets/apb-backup-nfs-conf"
+      secret_mnt: "/etc/apb-secrets/apb-bkup-nfs-pv-params"
 
   - name: "[Deprovision] update secrets"
     set_fact:

@@ -1,6 +1,6 @@
 ---
 - name: check for export
-  stat: 
+  stat:
     path: /etc/exports.d/{{ pvol_name }}.exports
   register: _exported
 

@@ -18,9 +18,18 @@
       path: "{{ secret_mnt }}"
     register: _secretMount
 
-  - block:
-    - name: "[Deprovision] Stage"
-      include_tasks: stage.yml
+  - name: "[Deprovision] get Labeled storage_UID"
+    shell: oc -n "{{ namespace }}" get serviceinstance -o json | jq -r '.items[] | select(.spec.externalID == "{{ _apb_service_instance_id }}") | .metadata.labels.storage_UID'
+    register: _labeled_storage_UID
+    changed_when: false
+
+  - name: "[Deprovision] set storage_UID"
+    set_fact:
+      storage_UID: _labeled_storage_UID.stdout
+    when: _labeled_storage_UID.stdout != ""
+
+  - name: "[Deprovision] Stage"
+    include_tasks: stage.yml
     when: _secretMount.stat.exists
 
 
@@ -56,5 +65,4 @@
       backup_storage_thinpool: "{{ hostvars['localhost']['backup_storage_thinpool'] }}"
   roles:
   - role: thin-nfs-export
-
 ...

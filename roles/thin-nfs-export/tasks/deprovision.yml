@@ -1,15 +1,9 @@
 ---
-- name: check for export
-  stat:
-    path: /etc/exports.d/{{ pvol_name }}.exports
-  register: _exported
-
-- name: remove exports entry
+- name: Remove exports entry
   file:
-    path: /etc/exports/d/{{ pvol_name }}.exports
+    path: /etc/exports.d/{{ pvol_name }}.exports
     follow: no
     state: absent
-  when: _exported.stat.exists
   notify: reload_nfs
 
 - meta: flush_handlers

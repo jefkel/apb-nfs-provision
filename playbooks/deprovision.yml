@@ -25,7 +25,7 @@
 
   - name: "[Deprovision] set storage_UID"
     set_fact:
-      storage_UID: _labeled_storage_UID.stdout
+      storage_UID: "{{ _labeled_storage_UID.stdout }}"
     when: _labeled_storage_UID.stdout != ""
 
   - name: "[Deprovision] Stage"

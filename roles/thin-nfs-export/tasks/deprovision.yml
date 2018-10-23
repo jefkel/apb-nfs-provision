@@ -4,19 +4,23 @@
     path: /etc/exports.d/{{ pvol_name }}.exports
     follow: no
     state: absent
-  notify: reload_nfs
 
-- meta: flush_handlers
+- name: Check exportfs for pvol_name
+  shell: "/sbin/exportfs -s | grep {{ pvol_name }}"
+  changed_when: false
+  register: _pvol_in_exportfs
 
-- name: release locks pause
-  pause:
-    seconds: 30
+- name: Remove pvol_name from exportfs
+  shell: "/sbin/exportfs -u *:{{ backup_storage_nfs_root }}/{{ pvol_name }}"
+  when: _pvol_in_exportfs.rc == 0
+  register: _exportfs_unshare
 
 - name: unmount volume
   mount:
     path: "{{ backup_storage_nfs_root }}/{{ pvol_name }}"
     src: "/dev/{{ lvm_thinpool.volume_group }}/{{ pvol_name }}"
     state: absent
+  when: _exportfs_unshare.rc == 0
   register: _mount_volume
 
 - name: remove thin-lv from pool
@@ -25,5 +29,6 @@
     lv: "{{ pvol_name }}"
     force: yes
     state: absent
+  when: _mount_volume.changed
 
 ...

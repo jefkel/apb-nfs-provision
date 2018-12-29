@@ -8,6 +8,7 @@
 - name: Check exportfs for pvol_name
   shell: "/sbin/exportfs -s | grep {{ pvol_name }}"
   changed_when: false
+  ignore_errors: true
   register: _pvol_in_exportfs
 
 - name: Remove pvol_name from exportfs
@@ -20,7 +21,6 @@
     path: "{{ backup_storage_nfs_root }}/{{ pvol_name }}"
     src: "/dev/{{ lvm_thinpool.volume_group }}/{{ pvol_name }}"
     state: absent
-  when: _exportfs_unshare.rc == 0
   register: _mount_volume
 
 - name: remove thin-lv from pool
@@ -29,6 +29,5 @@
     lv: "{{ pvol_name }}"
     force: yes
     state: absent
-  when: _mount_volume.changed
 
 ...

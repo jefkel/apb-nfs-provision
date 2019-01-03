@@ -1,3 +1,4 @@
+#FROM registry.access.redhat.com/openshift3/apb-base:v3.10
 FROM ansibleplaybookbundle/apb-base:release-1.2
 
 LABEL "com.redhat.apb.spec"=\
@@ -36,7 +37,8 @@ ZW50IGluIHRoZSBvcGFxdWUgc2VjcmV0LAojIHRoZXkgYXJlIG9ubHkgdmlzaWJsZSB2aWEgdGhl\
 IGJyb2tlciBuYW1lc3BhY2UsIG9yIHdpdGhpbiB0aGUgcnVubmluZyBhcGIuCg=="
 
 ENV BUNDLE_DEBUG=false
-RUN yum -y install jq \
+RUN  yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+  && yum -y install jq \
   && yum clean all
 COPY playbooks /opt/apb/actions
 COPY roles /opt/ansible/roles

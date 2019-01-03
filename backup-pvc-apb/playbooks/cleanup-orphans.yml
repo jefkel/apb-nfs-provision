@@ -1,0 +1,86 @@
+---
+# To cleanup a volume (currently does NOT check cluster objects)
+# run: ansible-playbook playbooks/cleanup-orphans.yml -e "volname=<lv name>"
+# -- note: currently hardcoded nfs facts, and requires remote user ansible access 
+#          to be currently setup.
+- name: Cleanup Setup
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  roles:
+#  - role: ansible.kubernetes-modules
+#    install_python_requirements: no
+#  - role: ansibleplaybookbundle.asb-modules
+  tasks:
+  - name: "[Deprovision] Prep Parameters"
+    set_fact:
+      mode: 'deprovision'
+      backup_storage_thinpool: 'bkthin001'
+      backup_storage_nfs_server: "central.cavenet.ca"
+      backup_storage_nfs_root: "/srv/nfs/oscbkp"
+      backup_storage_volumegroup: "bkup001"
+      remote_user: "jkelly"
+
+# Configure for remote NFS host access
+  - name: "[Stage] Adding remote host to inventory"
+    add_host:
+      name: "{{ backup_storage_nfs_server }}"
+      groups: nfs_server
+    changed_when: false
+
+
+- name: Provision NFS
+  hosts: nfs_server
+  remote_user: "{{ hostvars['localhost']['remote_user'] }}"
+  become: true
+  pre_tasks:
+  - name: Carry over vars from initial play
+    set_fact:
+      mode: deprovision
+      backup_storage_nfs_server: "{{ hostvars['localhost']['backup_storage_nfs_server'] }}"
+      backup_storage_nfs_root: "{{ hostvars['localhost']['backup_storage_nfs_root'] }}"
+      backup_storage_volumegroup: "{{ hostvars['localhost']['backup_storage_volumegroup'] }}"
+      backup_storage_thinpool: "{{ hostvars['localhost']['backup_storage_thinpool'] }}"
+      pvol_name: "{{ volname }}"
+#  roles:
+#  - role: thin-nfs-export
+
+  tasks:
+#  - name: "[Cleanup] Get List of lv names"
+#    shell: lvs --reportformat json | jq -r '.[]| .[]| .lv[] | select(.pool_lv == "{{ backup_storage_thinpool }}")| .lv_name'
+#    register: _lvnames
+#    changed_when: false
+
+  - name: Remove exports entry
+    file:
+      path: /etc/exports.d/{{ pvol_name }}.exports
+      follow: no
+      state: absent
+    register: _exported
+
+  - name: reload_nfs
+    service:
+      name: nfs-server
+      state: restarted
+    when: _exported.changed
+
+  - name: release locks pause
+    pause:
+      seconds: 30
+    when: _exported.changed
+
+  - name: unmount volume
+    mount:
+      path: "{{ backup_storage_nfs_root }}/{{ pvol_name }}"
+      src: "/dev/{{ backup_storage_volumegroup }}/{{ pvol_name }}"
+      state: absent
+    register: _mount_volume
+
+  - name: remove thin-lv from pool
+    lvol:
+      vg: "{{ backup_storage_volumegroup }}"
+      lv: "{{ pvol_name }}"
+      force: yes
+      state: absent
+
+...
